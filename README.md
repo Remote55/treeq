@@ -7,10 +7,10 @@
 <em>NSC 2026 หมวด 14 · Evidence-gated ML · 3D visual verification</em>
 
 [![NSC 2026](https://img.shields.io/badge/NSC-2026-2D6A4F)](https://www.nstda.or.th/sims)
-[![License: MIT](https://img.shields.io/github/license/Remote55/carbonscan-ai?color=52B788)](LICENSE)
-[![CI · ML](https://github.com/Remote55/carbonscan-ai/actions/workflows/ci-ml.yml/badge.svg)](https://github.com/Remote55/carbonscan-ai/actions/workflows/ci-ml.yml)
-[![CI · API](https://github.com/Remote55/carbonscan-ai/actions/workflows/ci-api.yml/badge.svg)](https://github.com/Remote55/carbonscan-ai/actions/workflows/ci-api.yml)
-[![CI · Web](https://github.com/Remote55/carbonscan-ai/actions/workflows/ci-web.yml/badge.svg)](https://github.com/Remote55/carbonscan-ai/actions/workflows/ci-web.yml)
+[![License: MIT](https://img.shields.io/github/license/Remote55/treeq?color=52B788)](LICENSE)
+[![CI · ML](https://github.com/Remote55/treeq/actions/workflows/ci-ml.yml/badge.svg)](https://github.com/Remote55/treeq/actions/workflows/ci-ml.yml)
+[![CI · API](https://github.com/Remote55/treeq/actions/workflows/ci-api.yml/badge.svg)](https://github.com/Remote55/treeq/actions/workflows/ci-api.yml)
+[![CI · Web](https://github.com/Remote55/treeq/actions/workflows/ci-web.yml/badge.svg)](https://github.com/Remote55/treeq/actions/workflows/ci-web.yml)
 
 </div>
 

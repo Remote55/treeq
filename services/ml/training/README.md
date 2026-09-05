@@ -22,8 +22,8 @@ The torch-free parts have unit tests in `../tests/test_woodleaf_training.py`
 
 ```bash
 # 1. clone the repo and cd into the ML service
-!git clone https://github.com/Remote55/carbonscan-ai.git
-%cd carbonscan-ai/services/ml
+!git clone https://github.com/Remote55/treeq.git
+%cd treeq/services/ml
 
 # 2. minimal deps (Colab already has torch + numpy + scipy)
 !pip install scipy

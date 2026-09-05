@@ -65,8 +65,8 @@ git --version     # ≥ 2.40
 
 ```bash
 # 1. Clone
-git clone https://github.com/<org>/carbonscan-ai.git
-cd carbonscan-ai
+git clone https://github.com/Remote55/treeq.git
+cd treeq
 
 # 2. Install JS dependencies
 pnpm install
@@ -247,7 +247,7 @@ RUNPOD_ENDPOINT_ID=<endpoint-id>
 REDIS_URL=redis://localhost:6379
 
 # CORS
-CORS_ORIGINS=http://localhost:3000,https://carbonscan-ai.vercel.app
+CORS_ORIGINS=http://localhost:3000,https://treeqcarbon.vercel.app
 ```
 
 ### services/ml/.env

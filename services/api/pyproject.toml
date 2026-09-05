@@ -72,8 +72,8 @@ dev = [
 ]
 
 [project.urls]
-Repository = "https://github.com/Remote55/carbonscan-ai"
-Issues = "https://github.com/Remote55/carbonscan-ai/issues"
+Repository = "https://github.com/Remote55/treeq"
+Issues = "https://github.com/Remote55/treeq/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["app"]

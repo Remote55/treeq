@@ -1,5 +1,12 @@
 # 📋 CarbonScan AI — Master Handoff Document
 
+> [!CAUTION]
+> **Historical — snapshot ของ 22 พ.ค. 2569 ห้ามอ่านเป็นสถานะปัจจุบัน**
+> เอกสารนี้เรียกตัวเองว่า "single reference doc" แต่บรรยายทีม 3 คน · deadline NSC 2026 ·
+> และเว็บที่ยัง deploy ไม่เสร็จ — **ไม่มีข้อไหนเป็นจริงแล้ว** NSC ไม่ผ่าน ทำคนเดียว
+> และเว็บ live อยู่ที่ https://treeqcarbon.vercel.app
+> สถานะปัจจุบัน: `CLAUDE.md` · [PROJECT_SPEC.md](PROJECT_SPEC.md) · [CAPABILITY_MATRIX.md](CAPABILITY_MATRIX.md)
+
 > **The single reference doc for everything about this project.**
 > Read this if you lose your other notes or onboard a new team member.
 >
