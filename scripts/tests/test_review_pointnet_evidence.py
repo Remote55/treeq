@@ -13,6 +13,8 @@ from pathlib import Path
 import pytest
 from scripts.review_pointnet_evidence import _load_json, _validate_result, import_reviewed_result
 from scripts.sync_truth import (
+    CAMEROON_PUBLISHED_FIELDS,
+    CAMEROON_RESULT_PATH,
     CONTROLLED_DOCS,
     DEMOL_PUBLISHED_FIELDS,
     DEMOL_RESULT_PATH,
@@ -35,6 +37,18 @@ DEMOL_METRICS: dict[str, object] = {
 } | {"trees": 65}
 DEMOL_ARTEFACT = json.dumps({"metrics": DEMOL_METRICS}, sort_keys=True).encode("utf-8")
 DEMOL_SHA256 = hashlib.sha256(DEMOL_ARTEFACT).hexdigest()
+
+#: The tropical block is required by load_manifest, so this fixture carries one
+#: too. Nothing here tests it -- these are the PointNet review's tests -- it
+#: just has to be present and self-consistent for the manifest to load.
+CAMEROON_METRICS: dict[str, object] = {
+    metrics_key: round(index * 0.4, 6)
+    for index, metrics_key in enumerate(CAMEROON_PUBLISHED_FIELDS.values(), start=1)
+}
+CAMEROON_ARTEFACT = json.dumps({"metrics": CAMEROON_METRICS}, sort_keys=True).encode(
+    "utf-8"
+)
+CAMEROON_SHA256 = hashlib.sha256(CAMEROON_ARTEFACT).hexdigest()
 EXTERNAL_IDS = tuple(f"tree-{index:02d}" for index in range(1, 11))
 review_pointnet_evidence = sys.modules[_validate_result.__module__]
 
@@ -109,6 +123,14 @@ def _manifest() -> dict[str, object]:
                 "result_path": DEMOL_RESULT_PATH,
                 "result_sha256": DEMOL_SHA256,
                 **DEMOL_METRICS,
+            },
+            "cameroon_61": {
+                "result_path": CAMEROON_RESULT_PATH,
+                "result_sha256": CAMEROON_SHA256,
+                **{
+                    manifest_key: CAMEROON_METRICS[metrics_key]
+                    for manifest_key, metrics_key in CAMEROON_PUBLISHED_FIELDS.items()
+                },
             },
         },
         "capabilities": [
@@ -370,6 +392,9 @@ def reviewed_repo(tmp_path: Path) -> tuple[Path, Path, Path]:
     demol_artefact = repo / DEMOL_RESULT_PATH
     demol_artefact.parent.mkdir(parents=True, exist_ok=True)
     demol_artefact.write_bytes(DEMOL_ARTEFACT)
+    cameroon_artefact = repo / CAMEROON_RESULT_PATH
+    cameroon_artefact.parent.mkdir(parents=True, exist_ok=True)
+    cameroon_artefact.write_bytes(CAMEROON_ARTEFACT)
     manifest_path = repo / "docs/evidence/core_demo_manifest.json"
     _write(manifest_path, _manifest())
     _git(repo, "add", ".")

@@ -4,9 +4,8 @@
 
 ### ประเมินชีวมวล คาร์บอน และ CO₂e ของต้นไม้จาก 3D point cloud พร้อมหลักฐานที่ตรวจสอบย้อนกลับได้
 
-<em>NSC 2026 หมวด 14 · Evidence-gated ML · 3D visual verification</em>
+<em>Evidence-gated ML · Destructively validated · 3D visual verification</em>
 
-[![NSC 2026](https://img.shields.io/badge/NSC-2026-2D6A4F)](https://www.nstda.or.th/sims)
 [![License: MIT](https://img.shields.io/github/license/Remote55/treeq?color=52B788)](LICENSE)
 [![CI · ML](https://github.com/Remote55/treeq/actions/workflows/ci-ml.yml/badge.svg)](https://github.com/Remote55/treeq/actions/workflows/ci-ml.yml)
 [![CI · API](https://github.com/Remote55/treeq/actions/workflows/ci-api.yml/badge.svg)](https://github.com/Remote55/treeq/actions/workflows/ci-api.yml)
@@ -190,7 +189,7 @@ apps/web/        Next.js landing, dashboard และ 3D viewer
 services/api/    FastAPI synchronous analyze endpoint
 services/ml/     8-stage point-cloud pipeline, training และ evaluation
 docs/            master spec, ML evidence, capability matrix และ decisions
-proposal/        เอกสารข้อเสนอโครงงาน NSC
+proposal/        เอกสารข้อเสนอฉบับเดิม (historical — เก็บไว้เพื่อ trace การตัดสินใจ)
 scripts/         truth sync และ report builder
 ```
 

@@ -17,7 +17,7 @@ import { decimate, parsePly } from '@/lib/ply-loader';
 import { LIMITS_LABEL_TH } from '@/lib/upload-limits';
 
 const { baseline, candidate } = CORE_DEMO_EVIDENCE;
-const { demol65, pointnetIndependent } = CORE_DEMO_EVIDENCE.validation;
+const { demol65, cameroon61, pointnetIndependent } = CORE_DEMO_EVIDENCE.validation;
 // The separation quality that describes what ships: the default backend,
 // measured on a cohort it never trained on. The Wan held-out numbers belong to
 // the candidate and to a split that also picked its best epoch.
@@ -59,7 +59,11 @@ const JOURNEY = [
     technical: [
       'วัดเส้นผ่านศูนย์กลางลำต้นที่ระดับ 1.3 เมตร',
       'คำนวณปริมาตรจากแบบจำลองทรงกระบอก QSM',
-      `ค่าคลาดเคลื่อนเฉลี่ย ${demol65.dbhMaeCm.toFixed(2)} ซม. จากต้นไม้จริง 65 ต้น`,
+      `ค่าคลาดเคลื่อนเฉลี่ย ${demol65.dbhMaeCm.toFixed(2)} ซม. จากต้นไม้เขตอบอุ่น 65 ต้น`,
+      // The tropical figure belongs beside the temperate one, not instead of
+      // it: the cohorts answer different questions and both are quoted.
+      `${cameroon61.dbhGateAppliedMaeCm.toFixed(2)} ซม. จากต้นไม้เขตร้อนที่โค่นและชั่งจริง ` +
+        `(${cameroon61.gatePassedTrees} ต้นที่ผ่านเกณฑ์คุณภาพการวัด)`,
     ],
   },
   {
@@ -195,7 +199,7 @@ useEffect(() => {
                 <span className="h-2 w-2 rounded-full bg-moss" />
 
                 <span className="text-xs font-semibold tracking-wide text-canopy">
-                  TREEQ CARBON / NSC 2026
+                  TREEQ CARBON / ตรวจสอบย้อนกลับได้ทุกตัวเลข
                 </span>
               </div>
 
@@ -544,11 +548,50 @@ useEffect(() => {
         />
       </div>
 
+      {/* Two cohorts, because they answer different questions and the
+          tropical one is the question this product is for. The panel used to
+          carry only the Belgian figure, which is a true number about
+          temperate isolated trees presented as the accuracy of a platform
+          aimed at tropical forest. */}
       <div className="h-full [&>*]:h-full">
         <EvidenceMetric
-          label="ค่าคลาดเคลื่อนการวัดขนาดลำต้น"
+          label="ค่าคลาดเคลื่อนการวัดขนาดลำต้น · เขตอบอุ่น"
           value={`${demol65.dbhMaeCm.toFixed(2)} ซม.`}
-          note="ทดสอบการวัดเส้นผ่านศูนย์กลางลำต้นกับต้นไม้จริงแยกเดี่ยวจำนวน 65 ต้น"
+          note="ทดสอบการวัดเส้นผ่านศูนย์กลางลำต้นกับต้นไม้จริงแยกเดี่ยวจำนวน 65 ต้น (เบลเยียม)"
+        />
+      </div>
+    </div>
+
+    <div className="mt-4 grid items-stretch gap-4 md:grid-cols-3">
+      <div className="h-full [&>*]:h-full">
+        <EvidenceMetric
+          label="ค่าคลาดเคลื่อนการวัดขนาดลำต้น · เขตร้อน"
+          value={`${cameroon61.dbhGateAppliedMaeCm.toFixed(2)} ซม.`}
+          note={
+            `ต้นไม้เขตร้อนที่ถูกโค่นและชั่งจริง ${cameroon61.treesMeasured} ต้น ` +
+            `(แคเมอรูน) — ค่านี้มาจาก ${cameroon61.gatePassedTrees} ต้นที่ผ่านเกณฑ์คุณภาพการวัด`
+          }
+          tone="dark"
+        />
+      </div>
+
+      {/* The refusal count is not a caveat, it is half the headline. An
+          average over the trees that passed says nothing about the trees
+          that did not, and 27 of 60 reads as 60 of 60 without this. */}
+      <div className="h-full [&>*]:h-full">
+        <EvidenceMetric
+          label="ต้นที่ระบบปฏิเสธไม่วัด"
+          value={`${cameroon61.gateRefusedTrees} จาก ${cameroon61.treesMeasured}`}
+          note="ลำต้นที่วงกลมทาบไม่ลง ระบบคืนรหัสเหตุผลแทนตัวเลข ส่วนใหญ่เป็นต้นใหญ่ที่มีพูพอน"
+          tone="lichen"
+        />
+      </div>
+
+      <div className="h-full [&>*]:h-full">
+        <EvidenceMetric
+          label="ค่าคลาดเคลื่อนถ้าบังคับให้ตอบทุกต้น"
+          value={`${cameroon61.dbhMaeCm.toFixed(2)} ซม.`}
+          note="ขอบบนของขั้นวัดขนาดบนชุดนี้ ไม่ใช่ค่าที่ผู้ใช้ได้รับ — แสดงไว้เพื่อไม่ให้ตัวเลขด้านซ้ายถูกอ่านเกินจริง"
         />
       </div>
     </div>
@@ -566,7 +609,7 @@ useEffect(() => {
             TreeQ Carbon Platform
           </span>
 
-          <span>Prototype for NSC 2026 · หมวด 14</span>
+          <span>Prototype · ผลลัพธ์เป็นค่าประมาณ ไม่ใช่คาร์บอนเครดิตที่ผ่านการรับรอง</span>
         </div>
       </footer>
 
