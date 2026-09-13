@@ -1,0 +1,96 @@
+name: CI Contract
+
+# The contract is the boundary between three codebases, so it is checked on any
+# change to any of them: a pipeline that starts emitting a new field and a web
+# client that starts reading one both have to go through this package.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/run-contract/**"
+      - ".github/workflows/ci-contract.yml"
+  pull_request:
+    paths:
+      - "packages/run-contract/**"
+      - ".github/workflows/ci-contract.yml"
+
+concurrency:
+  group: ci-contract-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contract:
+    name: Schema + both bindings
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    defaults:
+      run:
+        working-directory: packages/run-contract
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: packages/run-contract/pyproject.toml
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Python package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Install Node dependencies
+        run: npm install --no-save zod@^3.23.8 vitest@^1.6.0 typescript@^5.4.5
+
+      # Runs before the suites. A drift failure here says "regenerate", which is
+      # a clearer instruction than a type error in a file nobody hand-wrote.
+      - name: Generated bindings match the models
+        run: python tools/generate_contract.py --check
+
+      - name: Fixtures match the generator
+        run: |
+          python tools/build_fixtures.py
+          git diff --exit-code -- fixtures/ \
+            || { echo "::error::fixtures drifted; commit the regenerated files"; exit 1; }
+
+      - name: Python source is ASCII
+        # CLAUDE.md: the user's console is cp874 and a non-ASCII byte in a
+        # traceback or a print() kills the process. Documentation stays Thai;
+        # Python source does not.
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+
+          bad = []
+          for path in sorted(Path(".").rglob("*.py")):
+              if "node_modules" in path.parts:
+                  continue
+              try:
+                  path.read_bytes().decode("ascii")
+              except UnicodeDecodeError as exc:
+                  bad.append(f"{path}: {exc}")
+          if bad:
+              print("non-ASCII bytes in Python source:", *bad, sep="\n  ")
+              sys.exit(1)
+          print("all Python source is ASCII")
+          PY
+
+      - name: TypeScript typecheck
+        run: npx tsc --noEmit
+
+      - name: Python tests
+        run: python -m pytest tests/ -q
+
+      - name: TypeScript tests
+        run: npx vitest run

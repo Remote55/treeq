@@ -9,6 +9,7 @@ here and not there shows up as a failure rather than at the process boundary.
 from __future__ import annotations
 
 import json
+import sys
 import tomllib
 from pathlib import Path
 
@@ -187,3 +188,27 @@ def test_fixtures_on_disk_are_canonical_json() -> None:
                 + "\n"
             )
             assert raw == expected, f"{path.name} is not canonical; regenerate it"
+
+
+def test_generated_files_are_current() -> None:
+    """The generated bindings must match the models that produced them.
+
+    Without this, a field added in Python ships with a web client that never
+    learned about it - and the failure appears as a missing value at runtime
+    rather than as a red build.
+    """
+    sys.path.insert(0, str(PACKAGE_ROOT / "tools"))
+    from generate_contract import build  # noqa: PLC0415
+
+    stale = []
+    for path, expected in build().items():
+        relative = path.relative_to(PACKAGE_ROOT)
+        if not path.is_file():
+            stale.append(f"{relative}: missing")
+        elif path.read_text(encoding="utf-8") != expected:
+            stale.append(f"{relative}: stale")
+    assert not stale, (
+        "generated files drifted from the models: "
+        + ", ".join(stale)
+        + " -- run `python tools/generate_contract.py` in packages/run-contract"
+    )

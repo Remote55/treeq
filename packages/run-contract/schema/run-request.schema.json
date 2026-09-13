@@ -1,0 +1,286 @@
+{
+  "$defs": {
+    "CrsDeclaration": {
+      "additionalProperties": false,
+      "description": "A declared coordinate reference system.\n\nAbsent means nobody declared one. It does not mean WGS84, and no consumer\nmay substitute a default.",
+      "properties": {
+        "authority": {
+          "examples": [
+            "EPSG"
+          ],
+          "minLength": 1,
+          "title": "Authority",
+          "type": "string"
+        },
+        "code": {
+          "examples": [
+            "32632"
+          ],
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/DeclarationSource"
+        }
+      },
+      "required": [
+        "authority",
+        "code",
+        "source"
+      ],
+      "title": "CrsDeclaration",
+      "type": "object"
+    },
+    "DeclarationSource": {
+      "description": "Where a declared physical property came from.\n\nThere is deliberately no member for the file name. Reading a unit, a datum,\na CRS, a species or a wood density out of a file name is guessing, and this\nenum is the mechanism that makes the guess unrepresentable: a producer that\nwants to record \"I got the species from the file name\" has nothing valid to\nwrite and must instead leave the declaration absent, which is the truth.",
+      "enum": [
+        "operator",
+        "file_header",
+        "dataset_metadata",
+        "instrument_metadata"
+      ],
+      "title": "DeclarationSource",
+      "type": "string"
+    },
+    "DeclaredDensity": {
+      "additionalProperties": false,
+      "description": "Wood density, with where the number came from.\n\nA density is never a bare float in this contract. The pipeline does not\nmeasure density, and the value chosen moves every mass it reports roughly\nproportionally, so the reference travels with it.",
+      "properties": {
+        "reference": {
+          "minLength": 1,
+          "title": "Reference",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/DeclarationSource"
+        },
+        "value_g_cm3": {
+          "exclusiveMinimum": 0.0,
+          "maximum": 2.0,
+          "title": "Value G Cm3",
+          "type": "number"
+        }
+      },
+      "required": [
+        "value_g_cm3",
+        "source",
+        "reference"
+      ],
+      "title": "DeclaredDensity",
+      "type": "object"
+    },
+    "LengthUnit": {
+      "description": "The unit the source file's coordinates are in.\n\nRequired on every source declaration and never defaulted. A .ply carrying\nmillimetres and a .ply carrying metres are the same file extension, and the\ndifference is a factor of 1000 in every diameter this pipeline reports.",
+      "enum": [
+        "metre",
+        "centimetre",
+        "millimetre",
+        "foot",
+        "us_survey_foot"
+      ],
+      "title": "LengthUnit",
+      "type": "string"
+    },
+    "ProtocolRef": {
+      "additionalProperties": false,
+      "description": "The named criteria a quantity was judged against.\n\nMandatory on every `accepted` quantity. Without it, \"accepted\" is a bare\nassertion; with it, a reader can fetch the criteria and disagree.",
+      "properties": {
+        "criteria_uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Criteria Uri"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "version"
+      ],
+      "title": "ProtocolRef",
+      "type": "object"
+    },
+    "SourceDeclaration": {
+      "additionalProperties": false,
+      "description": "The uploaded file and the physical facts that cannot be read off it.",
+      "properties": {
+        "byte_size": {
+          "minimum": 0,
+          "title": "Byte Size",
+          "type": "integer"
+        },
+        "crs": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CrsDeclaration"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "file_name": {
+          "minLength": 1,
+          "title": "File Name",
+          "type": "string"
+        },
+        "file_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "File Sha256",
+          "type": "string"
+        },
+        "format": {
+          "$ref": "#/$defs/SourceFormat"
+        },
+        "length_unit": {
+          "$ref": "#/$defs/LengthUnit"
+        },
+        "length_unit_source": {
+          "$ref": "#/$defs/DeclarationSource"
+        },
+        "vertical_datum": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Vertical Datum"
+        }
+      },
+      "required": [
+        "file_name",
+        "file_sha256",
+        "byte_size",
+        "format",
+        "length_unit",
+        "length_unit_source"
+      ],
+      "title": "SourceDeclaration",
+      "type": "object"
+    },
+    "SourceFormat": {
+      "description": "Container format of the uploaded point cloud, as declared.",
+      "enum": [
+        "ply",
+        "las",
+        "laz",
+        "txt",
+        "xyz",
+        "csv"
+      ],
+      "title": "SourceFormat",
+      "type": "string"
+    },
+    "SpeciesDeclaration": {
+      "additionalProperties": false,
+      "description": "A declared species. Absent means unknown, never \"assume something\".",
+      "properties": {
+        "scientific_name": {
+          "minLength": 1,
+          "title": "Scientific Name",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/DeclarationSource"
+        }
+      },
+      "required": [
+        "scientific_name",
+        "source"
+      ],
+      "title": "SpeciesDeclaration",
+      "type": "object"
+    }
+  },
+  "$id": "https://treeq.dev/schema/2.0.0/run-request.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Everything the pipeline was told before it ran.\n\nNothing in here is derived from the file name. The properties a file name\nis commonly abused to supply - unit, CRS, datum, species, density - are\neither required with an explicit `DeclarationSource`, or optional and\ngenuinely absent when undeclared.",
+  "properties": {
+    "contract_version": {
+      "default": "2.0.0",
+      "title": "Contract Version",
+      "type": "string"
+    },
+    "max_points": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Max Points"
+    },
+    "protocol": {
+      "$ref": "#/$defs/ProtocolRef"
+    },
+    "request_id": {
+      "minLength": 1,
+      "title": "Request Id",
+      "type": "string"
+    },
+    "source": {
+      "$ref": "#/$defs/SourceDeclaration"
+    },
+    "species": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SpeciesDeclaration"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "wood_density": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DeclaredDensity"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "wood_leaf_backend": {
+      "minLength": 1,
+      "title": "Wood Leaf Backend",
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_id",
+    "source",
+    "wood_leaf_backend",
+    "protocol"
+  ],
+  "title": "RunRequest",
+  "type": "object"
+}

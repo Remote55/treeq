@@ -1,0 +1,650 @@
+{
+  "$defs": {
+    "CrsDeclaration": {
+      "additionalProperties": false,
+      "description": "A declared coordinate reference system.\n\nAbsent means nobody declared one. It does not mean WGS84, and no consumer\nmay substitute a default.",
+      "properties": {
+        "authority": {
+          "examples": [
+            "EPSG"
+          ],
+          "minLength": 1,
+          "title": "Authority",
+          "type": "string"
+        },
+        "code": {
+          "examples": [
+            "32632"
+          ],
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/DeclarationSource"
+        }
+      },
+      "required": [
+        "authority",
+        "code",
+        "source"
+      ],
+      "title": "CrsDeclaration",
+      "type": "object"
+    },
+    "DeclarationSource": {
+      "description": "Where a declared physical property came from.\n\nThere is deliberately no member for the file name. Reading a unit, a datum,\na CRS, a species or a wood density out of a file name is guessing, and this\nenum is the mechanism that makes the guess unrepresentable: a producer that\nwants to record \"I got the species from the file name\" has nothing valid to\nwrite and must instead leave the declaration absent, which is the truth.",
+      "enum": [
+        "operator",
+        "file_header",
+        "dataset_metadata",
+        "instrument_metadata"
+      ],
+      "title": "DeclarationSource",
+      "type": "string"
+    },
+    "DeclaredDensity": {
+      "additionalProperties": false,
+      "description": "Wood density, with where the number came from.\n\nA density is never a bare float in this contract. The pipeline does not\nmeasure density, and the value chosen moves every mass it reports roughly\nproportionally, so the reference travels with it.",
+      "properties": {
+        "reference": {
+          "minLength": 1,
+          "title": "Reference",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/DeclarationSource"
+        },
+        "value_g_cm3": {
+          "exclusiveMinimum": 0.0,
+          "maximum": 2.0,
+          "title": "Value G Cm3",
+          "type": "number"
+        }
+      },
+      "required": [
+        "value_g_cm3",
+        "source",
+        "reference"
+      ],
+      "title": "DeclaredDensity",
+      "type": "object"
+    },
+    "ExecutionStatus": {
+      "description": "Whether the code ran. Says nothing about whether the result is usable.\n\nThis axis and `QuantityStatus` are kept apart because they disagree in both\ndirections. A run that completes without raising can still produce a\ndiameter that no protocol will accept, and a run that fails partway can\nstill have produced usable measurements for the trees it reached.",
+      "enum": [
+        "ok",
+        "partial",
+        "failed"
+      ],
+      "title": "ExecutionStatus",
+      "type": "string"
+    },
+    "LengthUnit": {
+      "description": "The unit the source file's coordinates are in.\n\nRequired on every source declaration and never defaulted. A .ply carrying\nmillimetres and a .ply carrying metres are the same file extension, and the\ndifference is a factor of 1000 in every diameter this pipeline reports.",
+      "enum": [
+        "metre",
+        "centimetre",
+        "millimetre",
+        "foot",
+        "us_survey_foot"
+      ],
+      "title": "LengthUnit",
+      "type": "string"
+    },
+    "ProtocolRef": {
+      "additionalProperties": false,
+      "description": "The named criteria a quantity was judged against.\n\nMandatory on every `accepted` quantity. Without it, \"accepted\" is a bare\nassertion; with it, a reader can fetch the criteria and disagree.",
+      "properties": {
+        "criteria_uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Criteria Uri"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "version"
+      ],
+      "title": "ProtocolRef",
+      "type": "object"
+    },
+    "Quantity": {
+      "additionalProperties": false,
+      "description": "One derived number, its status, and what it was derived from.\n\nThe `value`/`status` pairing is the contract's core rule:\n\n* `accepted` and `provisional` carry a value and a unit.\n* `unusable` carries `value=None` and an `unusable_reason`.\n* `value=0.0` is a real zero and is only ever written when the quantity\n  really is zero. Missing is `None`, and the two are never interchanged.",
+      "properties": {
+        "basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Basis"
+        },
+        "depends_on": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Depends On",
+          "type": "array"
+        },
+        "protocol": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProtocolRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "sensitivity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SensitivityRange"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "status": {
+          "$ref": "#/$defs/QuantityStatus"
+        },
+        "unit": {
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        },
+        "unusable_reason": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UnusableReason"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "unit",
+        "status"
+      ],
+      "title": "Quantity",
+      "type": "object"
+    },
+    "QuantityStatus": {
+      "description": "Whether one derived number can be used, and under what claim.",
+      "enum": [
+        "accepted",
+        "provisional",
+        "unusable"
+      ],
+      "title": "QuantityStatus",
+      "type": "string"
+    },
+    "RunExecution": {
+      "additionalProperties": false,
+      "description": "Whether the code ran. Kept apart from whether the numbers are usable.",
+      "properties": {
+        "error_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Code"
+        },
+        "error_message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Message"
+        },
+        "finished_at": {
+          "minLength": 1,
+          "title": "Finished At",
+          "type": "string"
+        },
+        "started_at": {
+          "minLength": 1,
+          "title": "Started At",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/ExecutionStatus"
+        }
+      },
+      "required": [
+        "status",
+        "started_at",
+        "finished_at"
+      ],
+      "title": "RunExecution",
+      "type": "object"
+    },
+    "RunProvenance": {
+      "additionalProperties": false,
+      "description": "Which code, which inputs, and how much of the input was actually used.",
+      "properties": {
+        "algorithms": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Algorithms",
+          "type": "object"
+        },
+        "analysed_points_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Analysed Points Sha256",
+          "type": "string"
+        },
+        "checkpoint_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Checkpoint Sha256"
+        },
+        "git_commit": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Git Commit",
+          "type": "string"
+        },
+        "git_dirty": {
+          "title": "Git Dirty",
+          "type": "boolean"
+        },
+        "n_analysed_points": {
+          "minimum": 0,
+          "title": "N Analysed Points",
+          "type": "integer"
+        },
+        "n_source_points": {
+          "minimum": 0,
+          "title": "N Source Points",
+          "type": "integer"
+        },
+        "pipeline_version": {
+          "minLength": 1,
+          "title": "Pipeline Version",
+          "type": "string"
+        },
+        "wood_leaf_backend": {
+          "minLength": 1,
+          "title": "Wood Leaf Backend",
+          "type": "string"
+        }
+      },
+      "required": [
+        "pipeline_version",
+        "git_commit",
+        "git_dirty",
+        "algorithms",
+        "wood_leaf_backend",
+        "analysed_points_sha256",
+        "n_source_points",
+        "n_analysed_points"
+      ],
+      "title": "RunProvenance",
+      "type": "object"
+    },
+    "RunRequest": {
+      "additionalProperties": false,
+      "description": "Everything the pipeline was told before it ran.\n\nNothing in here is derived from the file name. The properties a file name\nis commonly abused to supply - unit, CRS, datum, species, density - are\neither required with an explicit `DeclarationSource`, or optional and\ngenuinely absent when undeclared.",
+      "properties": {
+        "contract_version": {
+          "default": "2.0.0",
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "max_points": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Points"
+        },
+        "protocol": {
+          "$ref": "#/$defs/ProtocolRef"
+        },
+        "request_id": {
+          "minLength": 1,
+          "title": "Request Id",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/SourceDeclaration"
+        },
+        "species": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SpeciesDeclaration"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "wood_density": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DeclaredDensity"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "wood_leaf_backend": {
+          "minLength": 1,
+          "title": "Wood Leaf Backend",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "source",
+        "wood_leaf_backend",
+        "protocol"
+      ],
+      "title": "RunRequest",
+      "type": "object"
+    },
+    "SensitivityRange": {
+      "additionalProperties": false,
+      "description": "A range produced by varying an assumption, not a confidence interval.\n\nThe low and high ends of this range come from recomputing the same number\nat the ends of a plausible input range - in this pipeline, wood density.\nThat is not a 95% confidence interval and must never be relabelled as one:\nit contains no sampling distribution, no error model for the measurement,\nand no allowance for the allometric equation being wrong.\n\nThe basis text is required, and a basis that claims an interval this range\nis not is refused outright.",
+      "properties": {
+        "basis": {
+          "minLength": 1,
+          "title": "Basis",
+          "type": "string"
+        },
+        "high": {
+          "title": "High",
+          "type": "number"
+        },
+        "low": {
+          "title": "Low",
+          "type": "number"
+        }
+      },
+      "required": [
+        "low",
+        "high",
+        "basis"
+      ],
+      "title": "SensitivityRange",
+      "type": "object"
+    },
+    "SourceDeclaration": {
+      "additionalProperties": false,
+      "description": "The uploaded file and the physical facts that cannot be read off it.",
+      "properties": {
+        "byte_size": {
+          "minimum": 0,
+          "title": "Byte Size",
+          "type": "integer"
+        },
+        "crs": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CrsDeclaration"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "file_name": {
+          "minLength": 1,
+          "title": "File Name",
+          "type": "string"
+        },
+        "file_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "File Sha256",
+          "type": "string"
+        },
+        "format": {
+          "$ref": "#/$defs/SourceFormat"
+        },
+        "length_unit": {
+          "$ref": "#/$defs/LengthUnit"
+        },
+        "length_unit_source": {
+          "$ref": "#/$defs/DeclarationSource"
+        },
+        "vertical_datum": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Vertical Datum"
+        }
+      },
+      "required": [
+        "file_name",
+        "file_sha256",
+        "byte_size",
+        "format",
+        "length_unit",
+        "length_unit_source"
+      ],
+      "title": "SourceDeclaration",
+      "type": "object"
+    },
+    "SourceFormat": {
+      "description": "Container format of the uploaded point cloud, as declared.",
+      "enum": [
+        "ply",
+        "las",
+        "laz",
+        "txt",
+        "xyz",
+        "csv"
+      ],
+      "title": "SourceFormat",
+      "type": "string"
+    },
+    "SpeciesDeclaration": {
+      "additionalProperties": false,
+      "description": "A declared species. Absent means unknown, never \"assume something\".",
+      "properties": {
+        "scientific_name": {
+          "minLength": 1,
+          "title": "Scientific Name",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/DeclarationSource"
+        }
+      },
+      "required": [
+        "scientific_name",
+        "source"
+      ],
+      "title": "SpeciesDeclaration",
+      "type": "object"
+    },
+    "TreeReport": {
+      "additionalProperties": false,
+      "description": "One detected tree and every quantity derived for it.",
+      "properties": {
+        "point_count": {
+          "minimum": 0,
+          "title": "Point Count",
+          "type": "integer"
+        },
+        "quantities": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Quantity"
+          },
+          "title": "Quantities",
+          "type": "object"
+        },
+        "species": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SpeciesDeclaration"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "tree_id": {
+          "title": "Tree Id",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "tree_id",
+        "quantities",
+        "point_count"
+      ],
+      "title": "TreeReport",
+      "type": "object"
+    },
+    "UnusableReason": {
+      "description": "Why a quantity cannot be used.\n\nRequired whenever a quantity is `unusable`, so the document always answers\n\"why not\" without a reader having to reconstruct it from the logs.",
+      "enum": [
+        "dependency_missing",
+        "dependency_refused",
+        "dependency_unsupported",
+        "dependency_unusable",
+        "input_out_of_range",
+        "not_implemented",
+        "execution_failed",
+        "protocol_not_met"
+      ],
+      "title": "UnusableReason",
+      "type": "string"
+    }
+  },
+  "$id": "https://treeq.dev/schema/2.0.0/run-report.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "The full, versioned result of one pipeline run.",
+  "properties": {
+    "contract_version": {
+      "default": "2.0.0",
+      "title": "Contract Version",
+      "type": "string"
+    },
+    "execution": {
+      "$ref": "#/$defs/RunExecution"
+    },
+    "limitations": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "provenance": {
+      "$ref": "#/$defs/RunProvenance"
+    },
+    "quantities": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Quantity"
+      },
+      "title": "Quantities",
+      "type": "object"
+    },
+    "request": {
+      "$ref": "#/$defs/RunRequest"
+    },
+    "run_id": {
+      "minLength": 1,
+      "title": "Run Id",
+      "type": "string"
+    },
+    "trees": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/TreeReport"
+      },
+      "title": "Trees",
+      "type": "array"
+    }
+  },
+  "required": [
+    "run_id",
+    "request",
+    "execution",
+    "provenance"
+  ],
+  "title": "RunReport",
+  "type": "object"
+}
