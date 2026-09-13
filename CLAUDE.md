@@ -3,6 +3,21 @@
 > โหลดเข้า context อัตโนมัติทุกครั้งที่เปิด project นี้
 > เดิมชื่อ **CarbonScan AI** — ชื่อเก่ายังอยู่ในเอกสาร historical และใน GitHub repo slug
 
+## ⚡ Checkpoint ล่าสุด (13 ก.ย. 2569)
+
+> **agent ที่มาต่อ อ่าน [`docs/handoffs/2026-09-13-claude-continuation.md`](docs/handoffs/2026-09-13-claude-continuation.md) ก่อน**
+
+- **S1 เสร็จแล้ว:** `packages/run-contract` — RunRequest/RunReport v2
+  (strict schemas + semantic validation + generated JSON Schema/TS/Zod + shared fixtures + drift check)
+- **3 commits ย้อนกลับได้ทีละอัน:** `f4ee12e` core / `ee0b6fd` generation / `7e3845a` wiring
+- **ยังไม่ push · ยังไม่เปิด PR** · branch `claude/kind-noether-syenrm`
+- **legacy ไม่ถูกแตะ** — `AnalyzeResponse`, `biomass_kg` (= AGB+BGB), `input_sha256` เหมือนเดิมทุกตัว
+- ผลรัน: contract 32 py + 27 vitest · api 114 · ml 6 · drift check พิสูจน์แล้วว่าล้มจริง
+
+> ⚠️ เอกสารที่ session ก่อนอ้างถึง (`docs/audits/`, plan/spec ลงวันที่ ก.ย.)
+> **ไม่มีอยู่ใน repo นี้** และงาน M0/M1a/M1b ที่ว่า "ยังไม่ commit" ก็ไม่ได้อยู่ที่นี่
+> ถ้ามันอยู่บน `D:\Project_Carbon` ต้อง merge เอง — รายละเอียดในเอกสารส่งต่อ
+
 ## Project
 
 ประเมินชีวมวล คาร์บอน และ CO₂e ของต้นไม้จาก 3D point cloud (`.ply` / `.las` / `.laz`)
