@@ -1,0 +1,173 @@
+{
+  "contract_version": "2.0.0",
+  "execution": {
+    "error_code": "POINT_CLOUD_UNREADABLE",
+    "error_message": "laspy could not read the point records",
+    "finished_at": "2026-09-13T02:17:42Z",
+    "started_at": "2026-09-13T02:15:00Z",
+    "status": "failed"
+  },
+  "limitations": [
+    "The run failed; this document records only that."
+  ],
+  "provenance": {
+    "algorithms": {
+      "allometric": "species_db_or_chave_fallback",
+      "chm": "max_z_morphology",
+      "ground_segmentation": "lowest_rank_grid",
+      "height_normalization": "knn_idw",
+      "qsm": "ransac_dbh_maxz_height_taper_volume",
+      "species": "stub",
+      "tree_segmentation": "watershed",
+      "wood_leaf": "tlsep"
+    },
+    "analysed_points_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "checkpoint_sha256": null,
+    "git_commit": "cccccccccccccccccccccccccccccccccccccccc",
+    "git_dirty": false,
+    "n_analysed_points": 200000,
+    "n_source_points": 5000000,
+    "pipeline_version": "0.4.0",
+    "wood_leaf_backend": "tlsep"
+  },
+  "quantities": {
+    "excluded_tree_count": {
+      "basis": "run aborted before this stage completed",
+      "depends_on": [],
+      "protocol": null,
+      "sensitivity": null,
+      "status": "unusable",
+      "unit": "count",
+      "unusable_reason": "execution_failed",
+      "value": null
+    },
+    "wood_density_g_cm3": {
+      "basis": "run aborted before this stage completed",
+      "depends_on": [],
+      "protocol": null,
+      "sensitivity": null,
+      "status": "unusable",
+      "unit": "g/cm3",
+      "unusable_reason": "execution_failed",
+      "value": null
+    }
+  },
+  "request": {
+    "contract_version": "2.0.0",
+    "max_points": 200000,
+    "protocol": {
+      "criteria_uri": "docs/ml/CAMEROON_EVIDENCE_CHAIN.md",
+      "id": "treeq-geometry-v1",
+      "version": "1.0.0"
+    },
+    "request_id": "req-0001",
+    "source": {
+      "byte_size": 10485760,
+      "crs": {
+        "authority": "EPSG",
+        "code": "32632",
+        "source": "file_header"
+      },
+      "file_name": "plot_a.laz",
+      "file_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "format": "laz",
+      "length_unit": "metre",
+      "length_unit_source": "file_header",
+      "vertical_datum": "EGM2008"
+    },
+    "species": {
+      "scientific_name": "Tectona grandis",
+      "source": "operator"
+    },
+    "wood_density": {
+      "reference": "services/ml/data/species_db.csv, row Tectona grandis",
+      "source": "dataset_metadata",
+      "value_g_cm3": 0.655
+    },
+    "wood_leaf_backend": "tlsep"
+  },
+  "run_id": "run-0003",
+  "trees": [
+    {
+      "point_count": 48213,
+      "quantities": {
+        "agb_kg": {
+          "basis": "run aborted before this stage completed",
+          "depends_on": [
+            "dbh_cm",
+            "height_m",
+            "plot.wood_density_g_cm3"
+          ],
+          "protocol": null,
+          "sensitivity": null,
+          "status": "unusable",
+          "unit": "kg",
+          "unusable_reason": "execution_failed",
+          "value": null
+        },
+        "bgb_kg": {
+          "basis": "run aborted before this stage completed",
+          "depends_on": [
+            "agb_kg"
+          ],
+          "protocol": null,
+          "sensitivity": null,
+          "status": "unusable",
+          "unit": "kg",
+          "unusable_reason": "execution_failed",
+          "value": null
+        },
+        "biomass_total_kg": {
+          "basis": "run aborted before this stage completed",
+          "depends_on": [
+            "agb_kg",
+            "bgb_kg"
+          ],
+          "protocol": null,
+          "sensitivity": null,
+          "status": "unusable",
+          "unit": "kg",
+          "unusable_reason": "execution_failed",
+          "value": null
+        },
+        "co2eq_kg": {
+          "basis": "run aborted before this stage completed",
+          "depends_on": [
+            "biomass_total_kg"
+          ],
+          "protocol": null,
+          "sensitivity": null,
+          "status": "unusable",
+          "unit": "kg",
+          "unusable_reason": "execution_failed",
+          "value": null
+        },
+        "dbh_cm": {
+          "basis": "run aborted before this stage completed",
+          "depends_on": [],
+          "protocol": null,
+          "sensitivity": null,
+          "status": "unusable",
+          "unit": "cm",
+          "unusable_reason": "execution_failed",
+          "value": null
+        },
+        "height_m": {
+          "basis": "run aborted before this stage completed",
+          "depends_on": [],
+          "protocol": null,
+          "sensitivity": null,
+          "status": "unusable",
+          "unit": "m",
+          "unusable_reason": "execution_failed",
+          "value": null
+        }
+      },
+      "species": {
+        "scientific_name": "Tectona grandis",
+        "source": "operator"
+      },
+      "tree_id": 1
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "treeq-run-contract"
+# Tracks CONTRACT_VERSION in python/treeq_run_contract/version.py. The test
+# suite asserts the two agree, so a contract bump cannot ship as a silent
+# package-version bump or the other way round.
+version = "2.0.0"
+description = "Versioned RunRequest/RunReport contract shared by the TreeQ API, ML pipeline and web client"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+
+# Deliberately one dependency. This package is installed into both the API venv
+# and the ML venv, and those two have very different weight: the API stays
+# lightweight on purpose and the ML venv carries numpy, laspy and friends.
+# Anything heavier than pydantic added here is paid for twice, and would make
+# the contract the reason a lean service stops being lean.
+dependencies = [
+    "pydantic>=2.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["python/treeq_run_contract"]
+
+# The fixture corpus is part of the contract, not test scaffolding: both
+# language bindings validate against the same files, so an installed copy of
+# this package has to carry them.
+[tool.hatch.build.targets.wheel.force-include]
+"fixtures" = "treeq_run_contract/fixtures"
+"schema" = "treeq_run_contract/schema"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
