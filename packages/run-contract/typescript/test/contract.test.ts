@@ -107,8 +107,12 @@ describe("rules that JSON Schema cannot carry", () => {
 
   it("treats a counted zero as a real value", () => {
     const report = parseRunReport(read("valid", "accepted_single_tree"));
-    expect(report.quantities.excluded_tree_count.value).toBe(0);
-    expect(report.quantities.excluded_tree_count.status).toBe("accepted");
+    // `quantities` is optional in the contract (it defaults to empty), so the
+    // narrowing here is the type doing its job rather than noise to suppress.
+    const excluded = report.quantities?.excluded_tree_count;
+    expect(excluded).toBeDefined();
+    expect(excluded?.value).toBe(0);
+    expect(excluded?.status).toBe("accepted");
   });
 
   it("will not let a provisional input produce an accepted output", () => {
