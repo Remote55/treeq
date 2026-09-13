@@ -39,6 +39,14 @@ dependencies = [
     "structlog>=24.1.0",
     "rich>=13.7.0",
     "httpx>=0.27.0",
+    # The versioned RunRequest/RunReport contract, in packages/run-contract.
+    # Not on PyPI: it is a workspace package and pip must be pointed at the
+    # path before this one is installed, which is what CONTRIBUTING.md and the
+    # CI workflows do:
+    #     pip install -e ../../packages/run-contract
+    # Listed here anyway so the requirement is declared rather than implied by
+    # whatever happens to be in the venv.
+    "treeq-run-contract>=2.0.0",
 ]
 
 [project.optional-dependencies]

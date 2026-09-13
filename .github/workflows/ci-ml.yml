@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "services/ml/**"
+      - "packages/run-contract/**"
       - "docs/evidence/core_demo_manifest.json"
       - "docs/evidence/pointnet_independent_eval/**"
       - "docs/CAPABILITY_MATRIX.md"
@@ -29,6 +30,7 @@ on:
   pull_request:
     paths:
       - "services/ml/**"
+      - "packages/run-contract/**"
       - "docs/evidence/core_demo_manifest.json"
       - "docs/evidence/pointnet_independent_eval/**"
       - "docs/CAPABILITY_MATRIX.md"
@@ -95,6 +97,13 @@ jobs:
             libglib2.0-0 \
             libgeos-dev \
             libproj-dev
+
+      # packages/run-contract is a workspace package, not a PyPI release, so it
+      # has to be on the path before the service that depends on it is
+      # installed. Without this, `pip install -e .` below goes looking for
+      # treeq-run-contract on PyPI and fails.
+      - name: Install the run contract
+        run: pip install -e packages/run-contract
 
       - name: Install Python dependencies (CPU)
         working-directory: services/ml

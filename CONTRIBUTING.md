@@ -176,6 +176,27 @@ Closes #<issue>
   - `UPPER_SNAKE_CASE` สำหรับ constants
 - **File Naming:** `kebab-case.ts` ยกเว้น Components ใช้ `PascalCase.tsx`
 
+### ลำดับการติดตั้ง Python (สำคัญ)
+
+`packages/run-contract` เป็น workspace package **ไม่ได้อยู่บน PyPI**
+ทั้ง `services/api` และ `services/ml` ประกาศมันเป็น dependency
+ต้องติดตั้งมันก่อน ไม่งั้น `pip install -e .` จะไปหาบน PyPI แล้วล้ม
+
+```bash
+pip install -e packages/run-contract     # จาก repo root ก่อนเสมอ
+
+cd services/api && pip install -e ".[dev]"
+cd services/ml  && pip install -e ".[cpu]"
+```
+
+แก้ contract แล้วต้อง regenerate ก่อน commit:
+
+```bash
+cd packages/run-contract
+python tools/generate_contract.py        # schema + TypeScript + Zod
+python tools/generate_contract.py --check # CI รันอันนี้ ล้มถ้า drift
+```
+
 ### Python (services/api, services/ml)
 - **Linter:** ruff
 - **Formatter:** black (line length 100)

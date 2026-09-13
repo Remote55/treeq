@@ -12,6 +12,7 @@ on:
       # image does not run when the image's contents change.
       - "services/ml/pipeline/**"
       - "services/ml/data/**"
+      - "packages/run-contract/**"
   pull_request:
     paths:
       - "services/api/**"
@@ -22,6 +23,7 @@ on:
       # image does not run when the image's contents change.
       - "services/ml/pipeline/**"
       - "services/ml/data/**"
+      - "packages/run-contract/**"
 
 concurrency:
   group: ci-api-${{ github.ref }}
@@ -53,6 +55,13 @@ jobs:
 
       # libgeos-dev and libproj-dev were installed here for geoalchemy2, which
       # went with the database layer. Nothing left in this package needs them.
+
+      # packages/run-contract is a workspace package, not a PyPI release, so it
+      # has to be on the path before the service that depends on it is
+      # installed. Without this, `pip install -e .` below goes looking for
+      # treeq-run-contract on PyPI and fails.
+      - name: Install the run contract
+        run: pip install -e packages/run-contract
 
       - name: Install Python dependencies
         working-directory: services/api
