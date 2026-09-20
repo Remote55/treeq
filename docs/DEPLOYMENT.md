@@ -50,7 +50,7 @@ vercel
 # Set production env vars in Vercel dashboard:
 # - NEXT_PUBLIC_SUPABASE_URL
 # - NEXT_PUBLIC_SUPABASE_ANON_KEY
-# - NEXT_PUBLIC_API_URL=https://api.carbonscan-ai.up.railway.app
+# - NEXT_PUBLIC_API_URL is deliberately left unset - no public API deployment exists
 ```
 
 ### Auto-deploy on push
@@ -67,7 +67,7 @@ GitHub integration → ทุก commit on `main` deploys to production.
 
 ### Initial Setup
 1. Sign up at railway.app (use GitHub login)
-2. New Project → Deploy from GitHub Repo → select `carbonscan-ai`
+2. New Project → Deploy from GitHub Repo → select `treeq`
 3. Set **Root Directory:** `services/api`
 4. Set **Start Command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 5. Add environment variables (from `.env.example`)

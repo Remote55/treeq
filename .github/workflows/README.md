@@ -86,9 +86,9 @@ cd apps/mobile && dart format --output=none --set-exit-if-changed lib/ test/ && 
 Add to README.md:
 
 ```markdown
-[![CI Web](https://github.com/Remote55/carbonscan-ai/actions/workflows/ci-web.yml/badge.svg)](https://github.com/Remote55/carbonscan-ai/actions/workflows/ci-web.yml)
-[![CI API](https://github.com/Remote55/carbonscan-ai/actions/workflows/ci-api.yml/badge.svg)](https://github.com/Remote55/carbonscan-ai/actions/workflows/ci-api.yml)
-[![CI ML](https://github.com/Remote55/carbonscan-ai/actions/workflows/ci-ml.yml/badge.svg)](https://github.com/Remote55/carbonscan-ai/actions/workflows/ci-ml.yml)
-[![CI Mobile](https://github.com/Remote55/carbonscan-ai/actions/workflows/ci-mobile.yml/badge.svg)](https://github.com/Remote55/carbonscan-ai/actions/workflows/ci-mobile.yml)
-[![CodeQL](https://github.com/Remote55/carbonscan-ai/actions/workflows/codeql.yml/badge.svg)](https://github.com/Remote55/carbonscan-ai/actions/workflows/codeql.yml)
+[![CI Web](https://github.com/Remote55/treeq/actions/workflows/ci-web.yml/badge.svg)](https://github.com/Remote55/treeq/actions/workflows/ci-web.yml)
+[![CI API](https://github.com/Remote55/treeq/actions/workflows/ci-api.yml/badge.svg)](https://github.com/Remote55/treeq/actions/workflows/ci-api.yml)
+[![CI ML](https://github.com/Remote55/treeq/actions/workflows/ci-ml.yml/badge.svg)](https://github.com/Remote55/treeq/actions/workflows/ci-ml.yml)
+[![CI Mobile](https://github.com/Remote55/treeq/actions/workflows/ci-mobile.yml/badge.svg)](https://github.com/Remote55/treeq/actions/workflows/ci-mobile.yml)
+[![CodeQL](https://github.com/Remote55/treeq/actions/workflows/codeql.yml/badge.svg)](https://github.com/Remote55/treeq/actions/workflows/codeql.yml)
 ```

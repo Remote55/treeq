@@ -153,8 +153,8 @@
 
 ```bash
 # 1. Clone repo
-git clone https://github.com/<org>/carbonscan-ai.git
-cd carbonscan-ai
+git clone https://github.com/Remote55/treeq.git
+cd treeq
 
 # 2. Install Node dependencies
 pnpm install

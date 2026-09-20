@@ -150,7 +150,7 @@ pip install -e ".[dev,gpu]"
 ### Google Colab
 ```python
 # In notebook
-!pip install -e /content/carbonscan-ai/services/ml[gpu]
+!pip install -e /content/treeq/services/ml[gpu]
 ```
 
 ---
