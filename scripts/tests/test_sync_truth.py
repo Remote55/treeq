@@ -564,10 +564,8 @@ class TestTheTropicalCohortReachesTheGeneratedSurfaces:
             f"gateRefusedTrees: {CAMEROON_METRICS['gate_refused_trees']}" in typescript
         )
 
-    def test_the_typescript_carries_the_ungated_upper_bound(self, tmp_path: Path):
-        """The figure for every tree that produced a number. It is the honest
-        ceiling on this cohort and it is an order of magnitude worse, so
-        publishing the gated figure alone overstates what the pipeline does."""
+    def test_the_typescript_carries_the_ungated_mean_error(self, tmp_path: Path):
+        """The all-measurable mean error is not a bound on individual error."""
         data = load_manifest(_manifest(tmp_path))
 
         typescript = render_typescript(data)
@@ -581,6 +579,21 @@ class TestTheTropicalCohortReachesTheGeneratedSurfaces:
 
         assert "Cameroon" in block
         assert str(CAMEROON_METRICS["dbh_gate_applied_mae_cm"]) in block
+
+    def test_ungated_mean_error_is_not_presented_as_an_upper_bound(self, tmp_path: Path):
+        block = render_truth_block(load_manifest(_manifest(tmp_path)))
+
+        assert "ungated DBH MAE" in block
+        assert "not an upper bound" in block
+        assert "ceiling and not the error" not in block
+
+    def test_paired_error_difference_is_not_a_causal_measurement_share(self, tmp_path: Path):
+        block = render_truth_block(load_manifest(_manifest(tmp_path)))
+
+        assert "median paired APE difference" in block
+        assert "percentage points" in block
+        assert "not a causal error decomposition" in block
+        assert "measurement contributing" not in block
 
     def test_the_truth_block_states_what_the_tropical_cohort_does_not_validate(
         self, tmp_path: Path

@@ -24,6 +24,7 @@ export const CORE_DEMO_EVIDENCE = {
       volumeMapePct: 11.520556,
     },
     cameroon61: {
+      trees: 61,
       treesMeasured: 60,
       dbhGateAppliedMaeCm: 1.369868,
       gatePassedTrees: 27,

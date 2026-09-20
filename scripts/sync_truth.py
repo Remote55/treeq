@@ -576,6 +576,7 @@ def render_typescript(manifest: dict[str, Any]) -> str:
             # for every tree. Publishing the first alone is how 27 of 60 reads
             # as 60 of 60.
             "    cameroon61: {",
+            f"      trees: {cameroon['trees']},",
             f"      treesMeasured: {cameroon['trees_measured']},",
             f"      dbhGateAppliedMaeCm: {cameroon['dbh_gate_applied_mae_cm']},",
             f"      gatePassedTrees: {cameroon['gate_passed_trees']},",
@@ -665,15 +666,17 @@ def render_truth_block(manifest: dict[str, Any]) -> str:
                 f"DBH MAE `{cameroon['dbh_gate_applied_mae_cm']} cm` over the "
                 f"`{cameroon['gate_passed_trees']}` trees the shipped gate passes, "
                 f"`{cameroon['gate_refused_trees']}` refused; "
-                f"`{cameroon['dbh_mae_cm']} cm` if every measurable tree is forced "
-                "to answer, which is the ceiling and not the error."
+                f"ungated DBH MAE `{cameroon['dbh_mae_cm']} cm` over all "
+                f"`{cameroon['trees_measured']}` measurable trees when forced to answer. "
+                "This cohort mean is not an upper bound on individual-tree error."
             ),
             (
-                f"- Cameroon allometric, scored against harvested mass: Chave 2014 "
+                f"- Cameroon field-geometry allometric AGB, scored against harvested mass: Chave 2014 "
                 f"median APE `{cameroon['chave_route_b_ape_pct_median']}%` against "
-                f"T-VER `{cameroon['tver_route_b_ape_pct_median']}%`, with the "
-                f"measurement contributing `{cameroon['chave_measurement_share_pct_median']}%` "
-                "at the median. These clouds arrive leaf-stripped and are single "
+                f"T-VER `{cameroon['tver_route_b_ape_pct_median']}%`. The Chave "
+                "median paired APE difference (cloud geometry minus field geometry) is "
+                f"`{cameroon['chave_measurement_share_pct_median']}` percentage points, "
+                "not a causal error decomposition. These clouds arrive leaf-stripped and are single "
                 "trees, so this validates neither stage 5 nor stages 1-4, and "
                 "Cameroon is not Thailand."
             ),

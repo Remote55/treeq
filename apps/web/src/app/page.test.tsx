@@ -127,10 +127,18 @@ describe('Landing evidence contract', () => {
     it('quotes no accuracy figure that is not in the generated evidence', () => {
       const markup = renderToStaticMarkup(<HomePage />);
 
-      // The ungated ceiling is 11.25 cm on this cohort. Showing the gated
-      // figure while the page has no room for the ceiling is a choice the
-      // copy has to make deliberately, not one a stale literal makes.
+      // The ungated mean error is cohort-specific, not an upper error bound.
       expect(markup).not.toContain('1.37 ซม. จากต้นไม้ 60');
+    });
+
+    it('distinguishes the cohort, measurable subset and ungated mean without inventing refusal causes', () => {
+      const markup = renderToStaticMarkup(<HomePage />);
+
+      expect(markup).toContain(`ทั้งหมด ${cameroon.trees} ต้น`);
+      expect(markup).toContain(`วัดได้ ${cameroon.treesMeasured} ต้น`);
+      expect(markup).toContain('ไม่ใช่ขอบบนของความผิดพลาด');
+      expect(markup).not.toContain('ส่วนใหญ่เป็นต้นใหญ่ที่มีพูพอน');
+      expect(markup).not.toContain('ขอบบนของขั้นวัดขนาด');
     });
   });
 
