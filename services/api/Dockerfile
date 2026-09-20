@@ -94,9 +94,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     TREEQ_GIT_DIRTY=${GIT_DIRTY} \
     ML_DIR=/app/services/ml
 
-# libgl1 and libgomp1 are open3d's; curl is what the HEALTHCHECK calls.
+# libegl1, libgl1 and libgomp1 are Open3D's; curl is for HEALTHCHECK.
 # libpq5, libgeos-c1v5 and libproj25 went with the database layer.
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    libegl1 \
     libgl1 \
     libgomp1 \
     curl \
