@@ -19,6 +19,7 @@ against trees that were cut down and weighed:
 | `test_published_evidence_is_current.py` | whether the accuracy figures in the proposal and on the dashboard are still what the pipeline produces — see [DEMOL_EVIDENCE_CHAIN.md](DEMOL_EVIDENCE_CHAIN.md) |
 | `test_dbh_bias_by_species.py` (part) | the control for the bark finding: whether an independent QSM under-reads the same trees — see [DBH_BIAS_AND_BARK.md](DBH_BIAS_AND_BARK.md) |
 | `test_cameroon_eval.py` (part) | the cohort loader against the real 1.29 GB archive: the 61-tree keying that excludes `ID_56`, min-Z normalization and the point cap, seeded-sample determinism, and that the five irregularly-formatted clouds parse and are flagged as repaired; the Chave-on-the-tape wiring smoke test and the Chave-vs-T-VER route B comparison, both costed from the real cohort's tape DBH and felled height — see [CAMEROON_EVIDENCE_CHAIN.md](CAMEROON_EVIDENCE_CHAIN.md) |
+| `test_cameroon_evidence_is_current.py` (part) | whether the tropical figures on the dashboard and in the truth block still re-derive from the 61 trees — the Cameroon counterpart of the row above it, and the same limitation |
 
 They skip because `services/ml/data/raw/zenodo_belgium/` and
 `services/ml/woodleaf_pn2.pt` are not in git — point clouds for 65 trees and a
@@ -58,6 +59,19 @@ Conclusions drawn from felled trees can be pinned in a form CI can check; what
 cannot cross the gap is anything that has to re-run the pipeline over the point
 clouds. The three assertions in that file which need the cohort itself still
 skip, and they are listed in the table above.
+
+`docs/evidence/cameroon_61/result.json` is committed for the same reason, and
+`scripts/sync_truth.py`'s `validate_cameroon` re-hashes it and compares every
+one of the twenty-five figures the manifest publishes against it on each
+`--check`. That runs on CI and cannot skip, so the manifest can no longer drift
+from its own artefact. It says nothing about whether the artefact still matches
+the trees — that is `test_cameroon_evidence_is_current.py`, and it skips here
+for the usual reason.
+
+Until both existed, the tropical block was the least guarded evidence in the
+repository: `load_manifest` did not require it, nothing re-hashed it, and no
+test held the two to each other, while the 65-tree temperate cohort had all
+three. The newest and strongest evidence had the weakest gate.
 
 ## What this means in practice
 

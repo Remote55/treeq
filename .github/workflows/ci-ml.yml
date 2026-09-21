@@ -91,7 +91,9 @@ jobs:
           sudo apt-get update
           # libgl1 replaces libgl1-mesa-glx on Ubuntu 24.04+
           sudo apt-get install -y \
+            libegl1 \
             libgl1 \
+            libusb-1.0-0 \
             libglib2.0-0 \
             libgeos-dev \
             libproj-dev
@@ -104,6 +106,11 @@ jobs:
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -e ".[dev]"
           pip install python-docx
+
+      # Open3D loads EGL during import, even when only reading PLY on CPU.
+      # Report missing shared libraries before the same import breaks many tests.
+      - name: Check Open3D runtime libraries
+        run: python -c "import open3d; print(open3d.__version__)"
 
       # photogrammetry/ used to be listed here. It has no tracked files - the
       # photo path was dropped and its modules deleted - so on a fresh checkout

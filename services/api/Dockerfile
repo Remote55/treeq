@@ -94,11 +94,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     TREEQ_GIT_DIRTY=${GIT_DIRTY} \
     ML_DIR=/app/services/ml
 
-# libgl1 and libgomp1 are open3d's; curl is what the HEALTHCHECK calls.
+# Open3D needs EGL, OpenGL, OpenMP and USB libraries even for CPU PLY import.
+# curl is for HEALTHCHECK.
 # libpq5, libgeos-c1v5 and libproj25 went with the database layer.
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    libegl1 \
     libgl1 \
     libgomp1 \
+    libusb-1.0-0 \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -110,6 +113,10 @@ WORKDIR /app
 # Copy installed packages from builder
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Readiness imports the orchestrator but Open3D is loaded only on a PLY request.
+# Fail the image build here if any of its native dependencies are missing.
+RUN python -c "import open3d; print(open3d.__version__)"
 
 # API
 COPY --chown=app:app services/api/app/ ./app/

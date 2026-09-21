@@ -77,6 +77,45 @@ DEMOL_PUBLISHED_FIELDS = (
 
 DEMOL_RESULT_PATH = "docs/evidence/demol_65/result.json"
 
+#: The Cameroon figures this manifest publishes, mapped to the key each one has
+#: in the artefact that derives them.
+#:
+#: Almost all of them are named the same on both sides. `trees` is the one that
+#: is not: the manifest names the cohort the way the other validation blocks
+#: name theirs, and `services/ml/scripts/derive_cameroon_evidence.py` writes it
+#: as `cohort_size`. Mapping rather than assuming equality is what lets the
+#: comparison below cover every published number instead of the subset whose
+#: names happen to line up.
+CAMEROON_PUBLISHED_FIELDS = {
+    "trees": "cohort_size",
+    "trees_measured": "trees_measured",
+    "trees_excluded": "trees_excluded",
+    "dbh_gate_applied_mae_cm": "dbh_gate_applied_mae_cm",
+    "gate_passed_trees": "gate_passed_trees",
+    "gate_refused_trees": "gate_refused_trees",
+    "gate_min_dbh_fit_quality": "gate_min_dbh_fit_quality",
+    "dbh_mae_cm_small_stems": "dbh_mae_cm_small_stems",
+    "dbh_mae_cm_small_stems_n": "dbh_mae_cm_small_stems_n",
+    "dbh_mae_cm": "dbh_mae_cm",
+    "dbh_bias_cm": "dbh_bias_cm",
+    "dbh_mae_vs_reference_cm": "dbh_mae_vs_reference_cm",
+    "dbh_bias_vs_reference_cm": "dbh_bias_vs_reference_cm",
+    "height_mae_m": "height_mae_m",
+    "height_bias_m": "height_bias_m",
+    "volume_mape_pct": "volume_mape_pct",
+    "volume_vs_reference_qsm_mape_pct": "volume_vs_reference_qsm_mape_pct",
+    "chave_route_a_ape_pct_median": "chave_route_a_ape_pct_median",
+    "chave_route_b_ape_pct_median": "chave_route_b_ape_pct_median",
+    "chave_measurement_share_pct_median": "chave_measurement_share_pct_median",
+    "tver_route_a_ape_pct_median": "tver_route_a_ape_pct_median",
+    "tver_route_b_ape_pct_median": "tver_route_b_ape_pct_median",
+    "tver_measurement_share_pct_median": "tver_measurement_share_pct_median",
+    "chave_vs_tver_route_b_chave_closer_count": "chave_vs_tver_route_b_chave_closer_count",
+    "chave_vs_tver_route_b_tver_closer_count": "chave_vs_tver_route_b_tver_closer_count",
+}
+
+CAMEROON_RESULT_PATH = "docs/evidence/cameroon_61/result.json"
+
 #: Documents that quote accuracy figures in hand-written prose.
 #:
 #: The TREEQ_TRUTH block is regenerated from the manifest, so the numbers inside
@@ -263,6 +302,68 @@ def validate_demol(block: Any, *, repo_root: str | Path | None) -> None:
         )
 
 
+def validate_cameroon(block: Any, *, repo_root: str | Path | None) -> None:
+    """Check the published Cameroon figures against the artefact that derived them.
+
+    Written to the same standard as `validate_demol`, because until it existed
+    the tropical block was held to none. `load_manifest` did not require it,
+    nothing re-hashed `docs/evidence/cameroon_61/result.json`, and no test
+    compared the two -- so the only cohort in this repository that has been cut
+    down and weighed, and the only one that reaches the allometric stage at all,
+    was the least guarded evidence in it.
+
+    The asymmetry mattered because `published_figure_values` reads this block to
+    decide whether a figure quoted in prose is current. A manifest number that
+    had drifted from its own artefact would have been used to certify documents
+    quoting the drifted number.
+    """
+    if not isinstance(block, dict):
+        raise ValueError("validation.cameroon_61 must be an object")
+    _require_keys(
+        block,
+        {"result_path", "result_sha256", *CAMEROON_PUBLISHED_FIELDS},
+        "validation.cameroon_61",
+    )
+    if block["result_path"] != CAMEROON_RESULT_PATH:
+        raise ValueError(
+            f"validation.cameroon_61 result_path must be {CAMEROON_RESULT_PATH}"
+        )
+    _require_sha256(block["result_sha256"], "validation.cameroon_61 result_sha256")
+
+    if repo_root is None:
+        # Structure only, matching validate_demol: sync() always supplies
+        # repo_root, so the comparison below runs on every `--check`.
+        return
+
+    result_file = Path(repo_root) / CAMEROON_RESULT_PATH
+    if not result_file.is_file():
+        raise ValueError(
+            f"{CAMEROON_RESULT_PATH} is missing; the published figures have no source"
+        )
+    raw = result_file.read_bytes()
+    digest = hashlib.sha256(raw).hexdigest()
+    if digest != block["result_sha256"]:
+        raise ValueError(
+            f"{CAMEROON_RESULT_PATH} has changed since it was reviewed "
+            f"(recorded {block['result_sha256']}, found {digest})"
+        )
+
+    metrics = json.loads(raw.decode("utf-8")).get("metrics")
+    if not isinstance(metrics, dict):
+        raise ValueError(f"{CAMEROON_RESULT_PATH} has no metrics block")
+    disagreeing = sorted(
+        manifest_key
+        for manifest_key, metrics_key in CAMEROON_PUBLISHED_FIELDS.items()
+        if block[manifest_key] != metrics.get(metrics_key)
+    )
+    if disagreeing:
+        raise ValueError(
+            "validation.cameroon_61 disagrees with the derived result for "
+            f"{disagreeing}; re-run derive_cameroon_evidence.py rather than "
+            "editing the manifest"
+        )
+
+
 def load_manifest(
     path: str | Path, *, repo_root: str | Path | None = None
 ) -> dict[str, Any]:
@@ -317,12 +418,19 @@ def load_manifest(
         raise ValueError("promotion evidence cannot auto-promote PointNet++")
 
     validation = manifest["validation"]
-    _require_keys(validation, {"wan_held_out", "demol_65"}, "validation")
+    # cameroon_61 is required, not optional. It was optional, which meant the
+    # tropical cohort could be dropped from the manifest and every gate would
+    # still pass -- and the figures the site publishes would silently revert to
+    # the temperate ones.
+    _require_keys(
+        validation, {"wan_held_out", "demol_65", "cameroon_61"}, "validation"
+    )
     wan = validation["wan_held_out"]
     for name, expected in EXPECTED_WAN.items():
         if wan.get(name) != expected:
             raise ValueError(f"Wan held-out {name} must equal {expected}")
     validate_demol(validation["demol_65"], repo_root=repo_root)
+    validate_cameroon(validation["cameroon_61"], repo_root=repo_root)
     independent = validation.get("pointnet_independent")
     if independent is not None:
         if repo_root is None:
@@ -430,6 +538,7 @@ def render_typescript(manifest: dict[str, Any]) -> str:
     """Render the immutable subset used by the Next.js UI."""
     wan = manifest["validation"]["wan_held_out"]
     demol = manifest["validation"]["demol_65"]
+    cameroon = manifest["validation"]["cameroon_61"]
     core = manifest["core_demo"]
     candidate = manifest["candidate"]
     independent = manifest["validation"].get("pointnet_independent")
@@ -459,6 +568,25 @@ def render_typescript(manifest: dict[str, Any]) -> str:
             "    demol65: {",
             f"      dbhMaeCm: {demol['dbh_mae_cm']},",
             f"      volumeMapePct: {demol['volume_mape_pct']},",
+            "    },",
+            # The tropical cohort, and the three numbers that have to travel
+            # together. dbhGateAppliedMaeCm is what a user is handed; it is an
+            # average over gatePassedTrees of gatePassedTrees + gateRefusedTrees,
+            # and dbhMaeCm is what the same stage produces when forced to answer
+            # for every tree. Publishing the first alone is how 27 of 60 reads
+            # as 60 of 60.
+            "    cameroon61: {",
+            f"      trees: {cameroon['trees']},",
+            f"      treesMeasured: {cameroon['trees_measured']},",
+            f"      dbhGateAppliedMaeCm: {cameroon['dbh_gate_applied_mae_cm']},",
+            f"      gatePassedTrees: {cameroon['gate_passed_trees']},",
+            f"      gateRefusedTrees: {cameroon['gate_refused_trees']},",
+            f"      dbhMaeCmSmallStems: {cameroon['dbh_mae_cm_small_stems']},",
+            f"      dbhMaeCmSmallStemsN: {cameroon['dbh_mae_cm_small_stems_n']},",
+            f"      dbhMaeCm: {cameroon['dbh_mae_cm']},",
+            f"      chaveRouteBApePctMedian: {cameroon['chave_route_b_ape_pct_median']},",
+            f"      tverRouteBApePctMedian: {cameroon['tver_route_b_ape_pct_median']},",
+            f"      chaveMeasurementSharePctMedian: {cameroon['chave_measurement_share_pct_median']},",
             "    },",
             *(
                 [
@@ -503,6 +631,7 @@ def render_truth_block(manifest: dict[str, Any]) -> str:
     """Render a compact human-readable snapshot for controlled documents."""
     wan = manifest["validation"]["wan_held_out"]
     demol = manifest["validation"]["demol_65"]
+    cameroon = manifest["validation"]["cameroon_61"]
     core = manifest["core_demo"]
     candidate = manifest["candidate"]
     independent = manifest["validation"].get("pointnet_independent")
@@ -530,6 +659,26 @@ def render_truth_block(manifest: dict[str, Any]) -> str:
                 f"- Demol isolated-tree validation (65 trees): DBH MAE "
                 f"`{demol['dbh_mae_cm']} cm`; Volume MAPE "
                 f"`{demol['volume_mape_pct']}%`. This is not an eight-stage or carbon validation."
+            ),
+            (
+                f"- Cameroon destructive tropical validation "
+                f"({cameroon['trees']} trees, {cameroon['trees_measured']} measurable): "
+                f"DBH MAE `{cameroon['dbh_gate_applied_mae_cm']} cm` over the "
+                f"`{cameroon['gate_passed_trees']}` trees the shipped gate passes, "
+                f"`{cameroon['gate_refused_trees']}` refused; "
+                f"ungated DBH MAE `{cameroon['dbh_mae_cm']} cm` over all "
+                f"`{cameroon['trees_measured']}` measurable trees when forced to answer. "
+                "This cohort mean is not an upper bound on individual-tree error."
+            ),
+            (
+                f"- Cameroon field-geometry allometric AGB, scored against harvested mass: Chave 2014 "
+                f"median APE `{cameroon['chave_route_b_ape_pct_median']}%` against "
+                f"T-VER `{cameroon['tver_route_b_ape_pct_median']}%`. The Chave "
+                "median paired APE difference (cloud geometry minus field geometry) is "
+                f"`{cameroon['chave_measurement_share_pct_median']}` percentage points, "
+                "not a causal error decomposition. These clouds arrive leaf-stripped and are single "
+                "trees, so this validates neither stage 5 nor stages 1-4, and "
+                "Cameroon is not Thailand."
             ),
             *(
                 [

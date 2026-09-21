@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 from scripts.sync_truth import (
+    CAMEROON_PUBLISHED_FIELDS,
+    CAMEROON_RESULT_PATH,
     DEMOL_PUBLISHED_FIELDS,
     DEMOL_RESULT_PATH,
     FIGURE_PROSE_DOCS,
@@ -16,6 +18,7 @@ from scripts.sync_truth import (
     load_manifest,
     missing_evidence_paths,
     render_capability_matrix,
+    render_truth_block,
     render_typescript,
     replace_truth_block,
     stale_figures_in_text,
@@ -28,6 +31,15 @@ DEMOL_METRICS: dict[str, object] = {
     field: f"{index}/65" if field.endswith("_within_10_pct") else round(index * 0.7, 6)
     for index, field in enumerate(DEMOL_PUBLISHED_FIELDS, start=1)
 } | {"trees": 65}
+
+#: The same idea for the tropical cohort. CAMEROON_PUBLISHED_FIELDS maps the
+#: manifest's name for each figure to the artefact's, because one of them
+#: differs -- the manifest calls the cohort size `trees` and the artefact calls
+#: it `cohort_size` -- so the fixture is keyed by the artefact's names.
+CAMEROON_METRICS: dict[str, object] = {
+    metrics_key: round(index * 0.4, 6)
+    for index, metrics_key in enumerate(CAMEROON_PUBLISHED_FIELDS.values(), start=1)
+}
 
 CURRENT_CLAIM_DOCS = (
     Path("README.md"),
@@ -127,6 +139,31 @@ def _unsupported_wan_positive_claims(prose: str) -> tuple[str, ...]:
     )
 
 
+def _write_artefact(root: Path, relative: str, metrics: dict[str, object]) -> str:
+    """Write a derivation artefact under `root` and return its SHA-256.
+
+    Both cohorts publish through the same shape -- a `metrics` object beside a
+    pinned hash -- so both test classes build their fixtures with this.
+    """
+    artefact = root / relative
+    artefact.parent.mkdir(parents=True, exist_ok=True)
+    payload = json.dumps({"metrics": metrics}).encode("utf-8")
+    artefact.write_bytes(payload)
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _cameroon_block() -> dict[str, object]:
+    """The manifest block, named the manifest's way, valued the artefact's."""
+    return {
+        "result_path": CAMEROON_RESULT_PATH,
+        "result_sha256": "5" * 64,
+        **{
+            manifest_key: CAMEROON_METRICS[metrics_key]
+            for manifest_key, metrics_key in CAMEROON_PUBLISHED_FIELDS.items()
+        },
+    }
+
+
 def _manifest(tmp_path: Path) -> Path:
     path = tmp_path / "manifest.json"
     path.write_text(
@@ -158,6 +195,7 @@ def _manifest(tmp_path: Path) -> Path:
                         "result_sha256": "4" * 64,
                         **DEMOL_METRICS,
                     },
+                    "cameroon_61": _cameroon_block(),
                 },
                 "capabilities": [
                     {
@@ -202,15 +240,20 @@ class TestThePublishedDemolFiguresHaveASource:
 
     @staticmethod
     def _with_artefact(tmp_path: Path, metrics: dict[str, object] | None = None) -> Path:
-        """A manifest beside a derivation artefact it correctly cites."""
+        """A manifest beside a derivation artefact it correctly cites.
+
+        The tropical artefact is written too, because `cameroon_61` is required
+        the same way this block is; without it every case below would fail on
+        the wrong cohort. `validate_demol` runs first, so the failures these
+        tests assert on are still Demol's.
+        """
         path = _manifest(tmp_path)
-        artefact = tmp_path / DEMOL_RESULT_PATH
-        artefact.parent.mkdir(parents=True, exist_ok=True)
-        payload = json.dumps({"metrics": metrics or DEMOL_METRICS}).encode("utf-8")
-        artefact.write_bytes(payload)
+        demol_sha = _write_artefact(tmp_path, DEMOL_RESULT_PATH, metrics or DEMOL_METRICS)
+        cameroon_sha = _write_artefact(tmp_path, CAMEROON_RESULT_PATH, CAMEROON_METRICS)
 
         data = json.loads(path.read_text(encoding="utf-8"))
-        data["validation"]["demol_65"]["result_sha256"] = hashlib.sha256(payload).hexdigest()
+        data["validation"]["demol_65"]["result_sha256"] = demol_sha
+        data["validation"]["cameroon_61"]["result_sha256"] = cameroon_sha
         path.write_text(json.dumps(data), encoding="utf-8")
         return path
 
@@ -284,6 +327,139 @@ class TestThePublishedDemolFiguresHaveASource:
                 load_manifest(path, repo_root=root)
 
 
+class TestThePublishedCameroonFiguresHaveASource:
+    """The tropical block had no validator at all.
+
+    `validate_demol` re-hashes its artefact and compares every published field
+    against it. `cameroon_61` had neither: `load_manifest` did not require the
+    block, nothing re-hashed `docs/evidence/cameroon_61/result.json`, and no
+    test held the two to each other. The only thing reading the block was
+    `published_figure_values`, which uses it to spot stale prose -- so a
+    manifest figure that had drifted from its own artefact would have been used
+    to certify documents quoting the drifted number.
+
+    That left the newest and strongest evidence in the repository -- 61 trees
+    cut down and weighed, the only cohort that checks the allometric stage --
+    guarded less than the 65-tree cohort it supersedes for tropical claims.
+    """
+
+    @staticmethod
+    def _with_artefacts(
+        tmp_path: Path, metrics: dict[str, object] | None = None
+    ) -> Path:
+        """A manifest beside both derivation artefacts, correctly cited."""
+        path = _manifest(tmp_path)
+        demol_sha = _write_artefact(tmp_path, DEMOL_RESULT_PATH, DEMOL_METRICS)
+        cameroon_sha = _write_artefact(
+            tmp_path, CAMEROON_RESULT_PATH, metrics or CAMEROON_METRICS
+        )
+
+        data = json.loads(path.read_text(encoding="utf-8"))
+        data["validation"]["demol_65"]["result_sha256"] = demol_sha
+        data["validation"]["cameroon_61"]["result_sha256"] = cameroon_sha
+        path.write_text(json.dumps(data), encoding="utf-8")
+        return path
+
+    def test_a_manifest_matching_its_artefact_loads(self, tmp_path: Path):
+        path = self._with_artefacts(tmp_path)
+
+        assert load_manifest(path, repo_root=tmp_path)["validation"]["cameroon_61"]
+
+    def test_a_manifest_with_no_tropical_block_is_refused(self, tmp_path: Path):
+        """The block was optional. A cohort that can be dropped from the
+        manifest without a gate noticing is a cohort the gate does not hold."""
+        path = self._with_artefacts(tmp_path)
+        data = json.loads(path.read_text(encoding="utf-8"))
+        del data["validation"]["cameroon_61"]
+        path.write_text(json.dumps(data), encoding="utf-8")
+
+        with pytest.raises(ValueError, match="validation missing required keys"):
+            load_manifest(path, repo_root=tmp_path)
+
+    def test_a_figure_with_no_artefact_behind_it_is_refused(self, tmp_path: Path):
+        path = _manifest(tmp_path)
+        _write_artefact(tmp_path, DEMOL_RESULT_PATH, DEMOL_METRICS)
+        data = json.loads(path.read_text(encoding="utf-8"))
+        data["validation"]["demol_65"]["result_sha256"] = hashlib.sha256(
+            json.dumps({"metrics": DEMOL_METRICS}).encode("utf-8")
+        ).hexdigest()
+        path.write_text(json.dumps(data), encoding="utf-8")
+
+        with pytest.raises(ValueError, match="have no source"):
+            load_manifest(path, repo_root=tmp_path)
+
+    def test_a_block_that_cites_nothing_is_refused(self, tmp_path: Path):
+        path = self._with_artefacts(tmp_path)
+        data = json.loads(path.read_text(encoding="utf-8"))
+        del data["validation"]["cameroon_61"]["result_path"]
+        path.write_text(json.dumps(data), encoding="utf-8")
+
+        with pytest.raises(ValueError, match="missing required keys"):
+            load_manifest(path, repo_root=tmp_path)
+
+    def test_a_block_citing_some_other_file_is_refused(self, tmp_path: Path):
+        path = self._with_artefacts(tmp_path)
+        data = json.loads(path.read_text(encoding="utf-8"))
+        data["validation"]["cameroon_61"]["result_path"] = "docs/evidence/elsewhere.json"
+        path.write_text(json.dumps(data), encoding="utf-8")
+
+        with pytest.raises(ValueError, match="result_path must be"):
+            load_manifest(path, repo_root=tmp_path)
+
+    def test_a_hand_edited_figure_is_refused(self, tmp_path: Path):
+        path = self._with_artefacts(tmp_path)
+        data = json.loads(path.read_text(encoding="utf-8"))
+        data["validation"]["cameroon_61"]["dbh_gate_applied_mae_cm"] = 0.1
+        path.write_text(json.dumps(data), encoding="utf-8")
+
+        with pytest.raises(
+            ValueError,
+            match=r"disagrees with the derived result.*dbh_gate_applied_mae_cm",
+        ):
+            load_manifest(path, repo_root=tmp_path)
+
+    def test_a_rewritten_artefact_is_refused(self, tmp_path: Path):
+        path = self._with_artefacts(tmp_path)
+        artefact = tmp_path / CAMEROON_RESULT_PATH
+        artefact.write_bytes(
+            json.dumps(
+                {"metrics": {**CAMEROON_METRICS, "dbh_gate_applied_mae_cm": 0.1}}
+            ).encode("utf-8")
+        )
+
+        with pytest.raises(ValueError, match="has changed since it was reviewed"):
+            load_manifest(path, repo_root=tmp_path)
+
+    def test_every_published_field_is_compared_not_just_the_quoted_ones(
+        self, tmp_path: Path
+    ):
+        """Six of the twenty-five reach `published_figure_values`. The rest --
+        the gate counts, the two allometric routes, the measurement share --
+        are quoted in CAMEROON_EVIDENCE_CHAIN.md and on the site, and a block is
+        only as sourced as its least-checked number."""
+        for manifest_key in CAMEROON_PUBLISHED_FIELDS:
+            root = tmp_path / manifest_key
+            root.mkdir()
+            path = self._with_artefacts(root)
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["validation"]["cameroon_61"][manifest_key] = "tampered"
+            path.write_text(json.dumps(data), encoding="utf-8")
+
+            with pytest.raises(
+                ValueError, match=rf"disagrees with the derived result.*{manifest_key}"
+            ):
+                load_manifest(path, repo_root=root)
+
+    def test_the_checked_in_manifest_agrees_with_its_committed_artefact(self):
+        """Not a fixture: the real manifest against the real 61-tree result."""
+        manifest = load_manifest(
+            Path("docs/evidence/core_demo_manifest.json"), repo_root=Path.cwd()
+        )
+
+        assert manifest["validation"]["cameroon_61"]["gate_passed_trees"] == 27
+        assert manifest["validation"]["cameroon_61"]["gate_refused_trees"] == 33
+
+
 def test_manifest_rejects_promoted_pointnet_without_gate(tmp_path: Path):
     path = _manifest(tmp_path)
     data = json.loads(path.read_text(encoding="utf-8"))
@@ -343,6 +519,93 @@ def test_generated_outputs_contain_exact_truth(tmp_path: Path):
     assert "Experimental" in matrix
     assert "Species classification" in matrix
     assert "Stub" in matrix
+
+
+class TestTheTropicalCohortReachesTheGeneratedSurfaces:
+    """The site published the temperate figure as the accuracy of the product.
+
+    `render_typescript` emitted `wanHeldOut`, `demol65` and
+    `pointnetIndependent` and stopped. `render_truth_block` emitted the first
+    two. So `apps/web/src/generated/core-demo-evidence.ts` had no tropical
+    figure to show, the landing page's accuracy panel read `0.90 cm` from the
+    65 Belgian trees, and the truth block in docs/PROJECT_SPEC.md said nothing
+    about the cohort that was cut down and weighed.
+
+    The number a visitor saw was true of temperate isolated trees. The product
+    is aimed at tropical forest, the tropical cohort had been measured, and the
+    gate that exists to stop documents drifting from evidence could not help,
+    because the evidence never reached the document.
+    """
+
+    def test_the_typescript_the_site_reads_carries_the_tropical_cohort(
+        self, tmp_path: Path
+    ):
+        data = load_manifest(_manifest(tmp_path))
+
+        typescript = render_typescript(data)
+
+        assert "cameroon61" in typescript
+        assert (
+            f"dbhGateAppliedMaeCm: {CAMEROON_METRICS['dbh_gate_applied_mae_cm']}"
+            in typescript
+        )
+
+    def test_the_typescript_carries_how_many_trees_the_gate_refused(
+        self, tmp_path: Path
+    ):
+        """The headline is an average over the trees that passed. Without the
+        refused count beside it, 27 of 60 looks like 60 of 60."""
+        data = load_manifest(_manifest(tmp_path))
+
+        typescript = render_typescript(data)
+
+        assert f"gatePassedTrees: {CAMEROON_METRICS['gate_passed_trees']}" in typescript
+        assert (
+            f"gateRefusedTrees: {CAMEROON_METRICS['gate_refused_trees']}" in typescript
+        )
+
+    def test_the_typescript_carries_the_ungated_mean_error(self, tmp_path: Path):
+        """The all-measurable mean error is not a bound on individual error."""
+        data = load_manifest(_manifest(tmp_path))
+
+        typescript = render_typescript(data)
+
+        assert f"dbhMaeCm: {CAMEROON_METRICS['dbh_mae_cm']}" in typescript
+
+    def test_the_truth_block_states_the_tropical_result(self, tmp_path: Path):
+        data = load_manifest(_manifest(tmp_path))
+
+        block = render_truth_block(data)
+
+        assert "Cameroon" in block
+        assert str(CAMEROON_METRICS["dbh_gate_applied_mae_cm"]) in block
+
+    def test_ungated_mean_error_is_not_presented_as_an_upper_bound(self, tmp_path: Path):
+        block = render_truth_block(load_manifest(_manifest(tmp_path)))
+
+        assert "ungated DBH MAE" in block
+        assert "not an upper bound" in block
+        assert "ceiling and not the error" not in block
+
+    def test_paired_error_difference_is_not_a_causal_measurement_share(self, tmp_path: Path):
+        block = render_truth_block(load_manifest(_manifest(tmp_path)))
+
+        assert "median paired APE difference" in block
+        assert "percentage points" in block
+        assert "not a causal error decomposition" in block
+        assert "measurement contributing" not in block
+
+    def test_the_truth_block_states_what_the_tropical_cohort_does_not_validate(
+        self, tmp_path: Path
+    ):
+        """These clouds arrive leaf-stripped and are single trees, so stages
+        1-4 and stage 5 are untouched by them. A truth block that gave the
+        figure without that would be the drift it exists to prevent."""
+        data = load_manifest(_manifest(tmp_path))
+
+        block = render_truth_block(data)
+
+        assert "leaf-stripped" in block
 
 
 def test_truth_block_requires_exactly_one_marker_pair():
@@ -620,6 +883,46 @@ def test_nothing_still_refers_to_the_deleted_mobile_app():
     """
     for path in (Path(".github/workflows/ci-mobile.yml"), Path("apps/mobile")):
         assert not path.exists(), f"{path} is back; the guard it needs is not"
+
+
+#: Surfaces a visitor or a new reader meets first, where the project has to say
+#: what it currently is.
+#:
+#: NSC 2026 was the competition this repository was built for. It was not won,
+#: and CLAUDE.md records that the framing is retired: the goal is now correct
+#: science that can be published and used. The badge, the hero eyebrow, the
+#: page metadata and the footer went on saying otherwise for weeks after,
+#: because nothing checked. Historical documents and the proposal keep the
+#: reference -- rewriting those would be falsifying a record -- so this is
+#: scoped to the surfaces that speak in the present tense.
+CURRENT_FRAMING_SURFACES = (
+    Path("README.md"),
+    Path("AGENTS.md"),
+    Path("apps/web/src/app/page.tsx"),
+    Path("apps/web/src/app/layout.tsx"),
+    Path("apps/web/src/app/demo/page.tsx"),
+)
+
+
+@pytest.mark.parametrize("path", CURRENT_FRAMING_SURFACES)
+def test_no_current_surface_still_claims_the_competition(path: Path):
+    text = path.read_text(encoding="utf-8")
+
+    assert "NSC 2026" not in text, (
+        f"{path} still presents the project as an NSC 2026 entry. The "
+        "competition was not won and the framing is retired; see CLAUDE.md."
+    )
+
+
+def test_the_retired_framing_is_still_recorded_where_it_belongs():
+    """The opposite failure: erasing it everywhere.
+
+    docs/DOCUMENT_STATUS.md classifies the proposal and the historical
+    documents as records of decisions taken. Deleting the competition from
+    those would be rewriting what happened, which this repository treats as a
+    worse fault than an out-of-date badge.
+    """
+    assert "NSC" in Path("docs/DOCUMENT_STATUS.md").read_text(encoding="utf-8")
 
 
 CORE_DEMO_PROSE_DOCS = (Path("README.md"), Path("docs/PROJECT_SPEC.md"))

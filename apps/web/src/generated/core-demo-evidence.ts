@@ -23,6 +23,19 @@ export const CORE_DEMO_EVIDENCE = {
       dbhMaeCm: 0.898318,
       volumeMapePct: 11.520556,
     },
+    cameroon61: {
+      trees: 61,
+      treesMeasured: 60,
+      dbhGateAppliedMaeCm: 1.369868,
+      gatePassedTrees: 27,
+      gateRefusedTrees: 33,
+      dbhMaeCmSmallStems: 1.683709,
+      dbhMaeCmSmallStemsN: 31,
+      dbhMaeCm: 11.254575,
+      chaveRouteBApePctMedian: 13.999223,
+      tverRouteBApePctMedian: 20.850468,
+      chaveMeasurementSharePctMedian: 5.800567,
+    },
     pointnetIndependent: {
       verdict: "FAIL_METRICS",
       baseline: {

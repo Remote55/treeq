@@ -20,7 +20,7 @@ backend, web, สถานะจริง, known bugs, roadmap. **อ่าน�
 ด้วย `tlsep` baseline แยก **ลำต้น(wood)/ใบ(leaf)** → วัด **DBH + ความสูง** → คำนวณ
 **ชีวมวล→carbon stock→CO₂e estimate** จาก `species_db.csv` หรือ Chave fallback พร้อม provenance
 ส่วน PointNet++, photogrammetry, marketplace และ certification ต้องรายงานตามสถานะ Experimental/Planned
-สร้างเพื่อแข่ง **NSC 2026 หมวด 14 (อุดมศึกษา)**
+เป้าหมายปัจจุบัน: **ถูกวิทยาศาสตร์ ตีพิมพ์ได้ และใช้งานได้จริง** — ดู CLAUDE.md
 
 ---
 
@@ -31,7 +31,7 @@ apps/web/        Next.js 14 (App Router, TS, Tailwind, shadcn) — landing + das
 services/api/    FastAPI (SQLAlchemy async, asyncpg, Pydantic v2, Alembic) — REST + async-job worker
 services/ml/     Point-cloud pipeline — tlsep default, PointNet++ Experimental, 8-step pipeline + allometric
 docs/            เอกสาร (PROJECT_SPEC.md, ml/, learning/, decisions/, superpowers/)
-proposal/        NSC proposal
+proposal/        เอกสารข้อเสนอฉบับเดิม (historical)
 memory/          project memory
 ```
 
@@ -136,7 +136,7 @@ Mean IoU `0.613`, accuracy `0.831` และ held-out loader ถูกใช้�
 ## Preferences ของผู้ใช้
 
 - ตอบ **ภาษาไทย** (technical terms EN ได้)
-- โฟกัส "ทำให้กรรมการ NSC ว้าว" — Deep Tech + visual storytelling
+- **ความถูกต้องมาก่อนความน่าประทับใจ** — กรอบ "ทำให้กรรมการว้าว" เลิกใช้แล้ว
 - **อย่า over-engineer** — prototype ที่เสร็จ > vision สมบูรณ์แต่ไม่เสร็จ
 - ทุก decision ที่มีค่าใช้จ่าย → "นักศึกษาจ่ายไหวไหม"
 - verify ก่อนเคลม — รันจริง/ดูผลจริง อย่าเดา

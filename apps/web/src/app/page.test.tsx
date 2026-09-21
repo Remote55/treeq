@@ -88,6 +88,60 @@ describe('Landing evidence contract', () => {
     expect(markup).not.toMatch(/PointNet\+\+[^<]*Default/);
   });
 
+  // The accuracy panel showed one diameter error: 0.90 cm, from 65 isolated
+  // trees in Belgium. That number is true and it is not the one this product
+  // is about. TreeQ is aimed at tropical forest; the tropical cohort has been
+  // measured — 61 trees felled and weighed in Cameroon — and the panel had no
+  // way to say so, because scripts/sync_truth.py never emitted the block.
+  //
+  // A visitor reading 0.90 cm was reading a temperate figure as the accuracy
+  // of a tropical product, and could not tell that the shipped gate refuses
+  // 33 of the 60 measurable trees in the cohort that does apply.
+  describe('the tropical cohort is not hidden behind the temperate one', () => {
+    const cameroon = CORE_DEMO_EVIDENCE.validation.cameroon61;
+
+    it('states the tropical diameter error beside the temperate one', () => {
+      const markup = renderToStaticMarkup(<HomePage />);
+
+      expect(markup).toContain(cameroon.dbhGateAppliedMaeCm.toFixed(2));
+      expect(markup).toContain(
+        CORE_DEMO_EVIDENCE.validation.demol65.dbhMaeCm.toFixed(2),
+      );
+    });
+
+    it('says how many trees the gate refused', () => {
+      const markup = renderToStaticMarkup(<HomePage />);
+
+      // Without both counts the headline is an average over an unnamed
+      // subset, and 27 of 60 reads as 60 of 60.
+      expect(markup).toContain(String(cameroon.gatePassedTrees));
+      expect(markup).toContain(String(cameroon.gateRefusedTrees));
+    });
+
+    it('names the cohort as tropical and destructively harvested', () => {
+      const markup = renderToStaticMarkup(<HomePage />);
+
+      expect(markup).toContain('เขตร้อน');
+    });
+
+    it('quotes no accuracy figure that is not in the generated evidence', () => {
+      const markup = renderToStaticMarkup(<HomePage />);
+
+      // The ungated mean error is cohort-specific, not an upper error bound.
+      expect(markup).not.toContain('1.37 ซม. จากต้นไม้ 60');
+    });
+
+    it('distinguishes the cohort, measurable subset and ungated mean without inventing refusal causes', () => {
+      const markup = renderToStaticMarkup(<HomePage />);
+
+      expect(markup).toContain(`ทั้งหมด ${cameroon.trees} ต้น`);
+      expect(markup).toContain(`วัดได้ ${cameroon.treesMeasured} ต้น`);
+      expect(markup).toContain('ไม่ใช่ขอบบนของความผิดพลาด');
+      expect(markup).not.toContain('ส่วนใหญ่เป็นต้นใหญ่ที่มีพูพอน');
+      expect(markup).not.toContain('ขอบบนของขั้นวัดขนาด');
+    });
+  });
+
   it('renders the five evidence-led editorial beats', () => {
     const markup = renderToStaticMarkup(<HomePage />);
 
